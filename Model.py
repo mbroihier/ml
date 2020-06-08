@@ -10,8 +10,8 @@ class Model:
         Model constructor - contrusts layers from the list entries
         '''
         self.layers = []
-        for (inputs, outputs, learningRate) in inputOutputList:
-            self.layers.append(nl.NeuralLayer(inputs, outputs, learningRate))
+        for (inputs, outputs, learningFactor) in inputOutputList:
+            self.layers.append(nl.NeuralLayer(inputs, outputs, learningFactor))
 
     def feedForward(self, inputs):
         '''
@@ -22,7 +22,30 @@ class Model:
             layerOutputs = aLayer.calculateOutput(layerOutputs)
         return layerOutputs
 
-    def updateWeights(self, target):
+    def updateDeltas(self, target, deltas=None):
+        '''
+        Update the deltas in all the layers
+        '''
+        reversedLayers = self.layers.copy()
+        reversedLayers.reverse()
+        lastLayer = len(reversedLayers) - 1
+        newDeltaList = False
+        if deltas is None:
+            deltas = []  #  make a list of deltas, one for each layer
+            newDeltaList = True
+        for index, layer in enumerate(reversedLayers):
+            #print("Working on layer index {}".format(index))
+            #print("updating deltas for Index: {}, layer: {}".format(index, lastLayer - index))
+            if newDeltaList:
+                deltas.append(layer.updateDeltas(target))
+            else:
+                deltas[index] = layer.updateDeltas(target, deltas=deltas[index])
+            if index < lastLayer:
+                reversedLayers[index+1].setPropogationError(layer.errorForNextLayer)
+        #print("returning deltas:\n {}".format(deltas))
+        return deltas
+        
+    def updateWeights(self, target=None, deltas=None):
         '''
         Update the weights and propogte the error of all layers
         '''
@@ -31,10 +54,14 @@ class Model:
         lastLayer = len(reversedLayers) - 1
         for index, layer in enumerate(reversedLayers):
             #print("Working on layer index {}".format(index))
-            layer.updateWeights(target)
-            if index < lastLayer:
-                reversedLayers[index+1].setPropogationError(layer.errorForNextLayer)
-            
+            if deltas is None:
+                layer.updateWeights(target)
+                if index < lastLayer:
+                    reversedLayers[index+1].setPropogationError(layer.errorForNextLayer)
+            else:
+                #print("type of deltas at this point is: {}".format(type(deltas[index])))
+                #print("updating weights using batch calculated deltas. Index: {}, layer: {}".format(index, lastLayer - index))
+                layer.updateWeights(deltas=deltas[index])
         
 def main():
     '''

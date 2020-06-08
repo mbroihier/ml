@@ -1,4 +1,3 @@
-import random
 import tensorflow as tf
 class NeuralLayer:
     '''
@@ -17,13 +16,13 @@ class NeuralLayer:
         self.numberOfNeurons = numberOfOutputs
         self.backPropagatedErrorNotSet = True
         self.learningFactor = learningFactor
-        initialWeights = []
-        for i in range((numberOfInputs+1)*numberOfOutputs):
-            initialWeights.append(random.random() - 0.5)
-        self.weights = tf.reshape(tf.convert_to_tensor(initialWeights), [numberOfInputs+1, numberOfOutputs])
+        #initialWeights = []
+        #for i in range((numberOfInputs+1)*numberOfOutputs):
+        #    initialWeights.append(random.random() - 0.5)
+        #self.weights = tf.reshape(tf.convert_to_tensor(initialWeights), [numberOfInputs+1, numberOfOutputs])
+        self.weights = tf.random.uniform([numberOfInputs+1, numberOfOutputs], minval=-0.5, maxval=0.5, dtype=tf.dtypes.float32)
         #self.weights = tf.reshape(tf.convert_to_tensor([0.0] * (numberOfInputs+1) * numberOfOutputs, tf.float32), [numberOfInputs+1, numberOfOutputs])
-        #self.error = [0.0] * numberOfOutputs
-        self.error = [0.0] * numberOfInputs
+        self.error = [0.0] * numberOfOutputs
 
     def calculateOutput(self, inputs):
         '''
@@ -70,25 +69,60 @@ class NeuralLayer:
         if (self.backPropagatedErrorNotSet):
             targetOutput = targetArray[index]
             self.error[index] = -(targetOutput - self.outputs[index])
+            #print("Measured Error: {}, index: {}, target output: {}, calculated output: {}".format(self.error[index], index, targetOutput, self.outputs[index]))
         else:
             pass  # should have been set by a higher layer
         return self.error[index]
 
-    def updateWeights(self, target):
+    def updateWeights(self, target=None, deltas=None):
         '''
-        Update the weights to minimize the loss
+        Update the weights to minimize the loss - if in batch mode, the deltas have been accumulated by updateDeltas
         '''
-        for neuron in range(self.numberOfNeurons):
-            #print("Working on neuron index {}".format(neuron))
-            if neuron == 0:
-                deltas = [self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()]  # make a 1 by n vector
-                #print("deltas: {}".format(deltas))
-            else:
-                deltas = tf.concat([deltas, [self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()]], 0)  # tack on a new row
+        #print("previous weights:\n {}".format(self.weights))
+        if deltas is None:
+            for neuron in range(self.numberOfNeurons):
+                #print("Working on neuron index {}".format(neuron))
+                if neuron == 0:
+                    deltas = [self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()]  # make a 1 by n vector
+                    #print("deltas: {}".format(deltas))
+                else:
+                    deltas = tf.concat([deltas, [self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()]], 0)  # tack on a new row
+            self.propogateError()  # do this before updating weights and updateDeltas hasn't done this
+        #print("weights:\n{}".format(self.weights))
+        #print("type of deltas is: {}\n{}".format(type(deltas), deltas))
+        #print("transposed deltas:\n{}".format(tf.transpose(deltas)))
+        self.weights -= self.learningFactor * tf.transpose(deltas)
+        #print("final deltas:\n {}".format(tf.transpose(deltas)))
+        #print("new weights:\n {}".format(self.weights))
+
+
+    def updateDeltas(self, target, deltas=None):
+        '''
+        Update the deltas during batch processing
+        '''
+        if deltas is None:
+            for neuron in range(self.numberOfNeurons):
+                #print("Working on neuron index {}".format(neuron))
+                if neuron == 0:
+                    deltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()),[1, len(self.netWRTWeightVector())])  # make a 1 by n vector
+                    #print("deltas: {}".format(deltas))
+                else:
+                    deltas = tf.concat((deltas, [self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()]), 0)  # tack on a new row
+                #print("neuron {}, type {}, deltas\n{}".format(neuron, type(deltas), deltas))
+        else:
+            for neuron in range(self.numberOfNeurons):
+                #print("Working on neuron index {}".format(neuron))
+                if neuron == 0:
+                    deltaDeltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()),[1, len(self.netWRTWeightVector())])  # make a 1 by n vector
+                    #print("deltas: {}".format(deltas))
+                else:
+                    deltaDeltas = tf.concat((deltaDeltas, [self.errorWRTPsi(target, neuron) * self.psiWRTz(neuron) * self.netWRTWeightVector()]), 0)  # tack on a new row
+                #print("neuron {}, type {}, deltaDeltas\n{}".format(neuron, type(deltaDeltas), deltaDeltas))
+            deltas += deltaDeltas
         self.propogateError()  # do this before updating weights
-        self.weights -= tf.transpose(deltas)
         #print("final deltas: {}".format(tf.transpose(deltas)))
         #print("new weights: {}".format(self.weights))
+        return deltas
 
     def propogateError(self):
         '''
@@ -132,7 +166,8 @@ def main():
     for count in range(10000):
         twoByTwo.calculateOutput([1.0, 1.0])
         twoByTwo.updateWeights([0.01, 0.99])
-    print("final weights:\n {}".format(twoByTwo.weights))
+    print
+    ("final weights:\n {}".format(twoByTwo.weights))
     print("final outputs:\n {}".format(twoByTwo.outputs))
     twoByTwo.propogateError()
     print("Propogated Error:\n {}".format(twoByTwo.errorForNextLayer))
