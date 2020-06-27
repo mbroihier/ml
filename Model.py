@@ -5,14 +5,29 @@ class Model:
     Class for defining a model that consists of nueral layers.  The first layer is always the inputs, which means that it does not exist as a NeuralLayer.
     All subsequent layers are completely interconnected except for the final layer
     '''
-    def __init__(self, inputOutputList):
+    def __init__(self, inputOutputList, filePath=None):
         '''
         Model constructor - contrusts layers from the list entries
         '''
         self.layers = []
+        layerIndex = 0
         for (inputs, outputs, learningFactor) in inputOutputList:
-            self.layers.append(nl.NeuralLayer(inputs, outputs, learningFactor))
+            if filePath is None:
+                weightFilePath = filePath
+            else:
+                weightFilePath = filePath + str(layerIndex)
+                layerIndex += 1
+            self.layers.append(nl.NeuralLayer(inputs, outputs, learningFactor, weightFilePath))
 
+    def storeModel(self, filePath):
+        '''
+        Store the weights for all of the layers of this model
+        '''
+        layerIndex = 0
+        for layer in self.layers:
+            layer.storeLayer(filePath + str(layerIndex))
+            layerIndex += 1
+        
     def feedForward(self, inputs):
         '''
         Given the inputs, propagate them through the model layers

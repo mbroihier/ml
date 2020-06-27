@@ -1,3 +1,4 @@
+import pickle
 import tensorflow as tf
 class NeuralLayer:
     '''
@@ -8,7 +9,7 @@ class NeuralLayer:
     the difference between a known target value and the output of the Psi function.  The Psi function is 
     1/(1+e^-z).  And z, also known as net, is the sum of product of the weights and inputs (which includes the bias).
     '''
-    def __init__(self, numberOfInputs, numberOfOutputs, learningFactor=1.0):
+    def __init__(self, numberOfInputs, numberOfOutputs, learningFactor=1.0, filePath=None):
         '''
         Nueron constructor - uses tensors - last weight is the bias term
         '''
@@ -16,14 +17,22 @@ class NeuralLayer:
         self.numberOfNeurons = numberOfOutputs
         self.backPropagatedErrorNotSet = True
         self.learningFactor = learningFactor
-        #initialWeights = []
-        #for i in range((numberOfInputs+1)*numberOfOutputs):
-        #    initialWeights.append(random.random() - 0.5)
-        #self.weights = tf.reshape(tf.convert_to_tensor(initialWeights), [numberOfInputs+1, numberOfOutputs])
         self.weights = tf.random.uniform([numberOfInputs+1, numberOfOutputs], minval=-0.5, maxval=0.5, dtype=tf.dtypes.float32)
-        #self.weights = tf.reshape(tf.convert_to_tensor([0.0] * (numberOfInputs+1) * numberOfOutputs, tf.float32), [numberOfInputs+1, numberOfOutputs])
         self.error = [0.0] * numberOfOutputs
+        self.filePath = filePath
+        if not filePath is None:
+            fileHandle = open(filePath, "rb")
+            self.weights = pickle.load(fileHandle)
+            fileHandle.close()
 
+    def storeLayer(self, filePath):
+        '''
+        Store the weights that have been trained
+        '''
+        fileHandle = open(filePath, "wb")
+        pickle.dump(self.weights, fileHandle)
+        fileHandle.close()
+        
     def calculateOutput(self, inputs):
         '''
         Given the inputs, calculate the outputs
@@ -58,13 +67,13 @@ class NeuralLayer:
 
     def psiWRTz(self, index):
         '''
-        ∂ψᵢ/∂zᵢ = ψᵢ*(1-ψᵢ) where o = 1 / (1 + e^(-z)) -- the partial change of ψ with respect to z - this is a scalar - must designate output index
+        ∂ψᵢ/∂zᵢ = ψᵢ*(1-ψᵢ) where ψ = 1 / (1 + e^(-z)) -- the partial change of ψ with respect to z - this is a scalar - must designate output index
         '''
         return self.outputs[index]*(1 - self.outputs[index])
 
     def errorWRTPsi(self, targetArray, index):
         '''
-        ∂Eᵢ/∂ψᵢ =  -(targetOutput - oᵢ)  # assuming that E is square of the error and ignoring the gain (2) - this is a scalar must designate output index
+        ∂Eᵢ/∂ψᵢ =  -(targetOutput - ψᵢ)  # assuming that E is square of the error and ignoring the gain (2) - this is a scalar must designate output index
         '''
         if (self.backPropagatedErrorNotSet):
             targetOutput = targetArray[index]
