@@ -1,5 +1,5 @@
 import tensorflow as tf
-import NeuralLayer
+import NeuralLayer as nl
 
 
 class Model:
@@ -27,7 +27,7 @@ class Model:
             else:
                 weightFilePath = filePath + str(layerIndex)
                 layerIndex += 1
-            self.layers.append(NeuralLayer.NeuralLayer(inputs, outputs, learningFactor, layerid, debug, weightFilePath))
+            self.layers.append(nl.NeuralLayer(inputs, outputs, learningFactor, layerid, debug, weightFilePath))
 
     def storeModel(self, filePath):
         '''
@@ -59,11 +59,10 @@ class Model:
             deltas = []  # make a list of deltas, one for each layer
             newDeltaList = True
         for index, layer in enumerate(reversedLayers):
-            topIndicator = index == 0
             if newDeltaList:
-                deltas.append(layer.updateDeltas(target, topIndicator))
+                deltas.append(layer.updateDeltas(target))
             else:
-                deltas[index] = layer.updateDeltas(target, topIndicator, deltas=deltas[index])
+                deltas[index] = layer.updateDeltas(target, deltas=deltas[index])
             if index < lastLayer:
                 reversedLayers[index+1].setPropagationError(layer.errorForNextLayer)
         return deltas

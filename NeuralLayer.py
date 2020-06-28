@@ -91,98 +91,50 @@ class NeuralLayer:
             pass  # should have been set by a higher layer
         return self.error[index]
 
-    def updateWeights(self, top=False, target=None, deltas=None):
+    def updateWeights(self, target=None, deltas=None):
         '''
         Update the weights to minimize the loss - if in batch mode, the deltas have been accumulated by updateDeltas
         '''
         if deltas is None:
-            if top:
-                for neuron in range(self.numberOfNeurons):
-                    if neuron == 0:
-                        deltas = [self.errorWRTPsi(target, neuron)
-                                  * self.netWRTWeightVector()]  # make a 1 by n vector
-                    else:
-                        deltas = tf.concat([deltas, [self.errorWRTPsi(target, neuron)
-                                                     * self.netWRTWeightVector()]], 0)  # tack on a new row
-            else:
-                for neuron in range(self.numberOfNeurons):
-                    if neuron == 0:
-                        deltas = [self.errorWRTPsi(target, neuron)
-                                  * self.outputs[neuron]
-                                  * (1.0 - self.outputs[neuron])
-                                  * self.netWRTWeightVector()]  # make a 1 by n vector
-                    else:
-                        deltas = tf.concat([deltas, [self.errorWRTPsi(target, neuron)
-                                                     * self.outputs[neuron]
-                                                     * (1.0 - self.outputs[neuron])
-                                                     * self.netWRTWeightVector()]], 0)  # tack on a new row
+            for neuron in range(self.numberOfNeurons):
+                if neuron == 0:
+                    deltas = [self.errorWRTPsi(target, neuron)
+                              * self.netWRTWeightVector()]  # make a 1 by n vector
+                else:
+                    deltas = tf.concat([deltas, [self.errorWRTPsi(target, neuron)
+                                                 * self.netWRTWeightVector()]], 0)  # tack on a new row
             self.propagateError()  # do this before updating weights and updateDeltas hasn't done this
         self.weights -= tf.transpose(deltas)
 
-    def updateDeltas(self, target, top=False, deltas=None):
+    def updateDeltas(self, target, deltas=None):
         '''
         Update the deltas during batch processing
         '''
-        if top:
-            if deltas is None:
-                for neuron in range(self.numberOfNeurons):
-                    if neuron == 0:
-                        deltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
-                                                                 * self.netWRTWeightVector()),
-                                            [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
-                    else:
-                        deltas = tf.concat((deltas, [self.errorWRTPsi(target, neuron)
-                                                     * self.netWRTWeightVector()]), 0)  # tack on a new row
-                    if self.debug:
-                        print("updateDeltas - layer {}, neuron {}, weight deltas\n{}".
-                              format(self.id, neuron, deltas))
-            else:
-                for neuron in range(self.numberOfNeurons):
-                    if neuron == 0:
-                        deltaDeltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
-                                                                      * self.netWRTWeightVector()),
-                                                 [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
-                    else:
-                        deltaDeltas = tf.concat((deltaDeltas, [self.errorWRTPsi(target, neuron)
-                                                               * self.netWRTWeightVector()]), 0)  # tack on a new row
-                    if self.debug:
-                        print("updateDeltas - layer {}, neuron {}, weight deltaDeltas\n{}".
-                              format(self.id, neuron, deltaDeltas))
-                deltas += deltaDeltas
+        if deltas is None:
+            for neuron in range(self.numberOfNeurons):
+                if neuron == 0:
+                    deltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
+                                                             * self.netWRTWeightVector()),
+                                        [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
+                else:
+                    deltas = tf.concat((deltas, [self.errorWRTPsi(target, neuron)
+                                                 * self.netWRTWeightVector()]), 0)  # tack on a new row
+                if self.debug:
+                    print("updateDeltas - layer {}, neuron {}, weight deltas\n{}".
+                          format(self.id, neuron, deltas))
         else:
-            if deltas is None:
-                for neuron in range(self.numberOfNeurons):
-                    if neuron == 0:
-                        deltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
-                                                                 * self.outputs[neuron]
-                                                                 * (1.0 - self.outputs[neuron])
-                                                                 * self.netWRTWeightVector()),
-                                            [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
-                    else:
-                        deltas = tf.concat((deltas, [self.errorWRTPsi(target, neuron)
-                                                     * self.outputs[neuron]
-                                                     * (1.0 - self.outputs[neuron])
-                                                     * self.netWRTWeightVector()]), 0)  # tack on a new row
-                    if self.debug:
-                        print("updateDeltas - layer {}, neuron {}, weight deltas\n{}".
-                              format(self.id, neuron, deltas))
-            else:
-                for neuron in range(self.numberOfNeurons):
-                    if neuron == 0:
-                        deltaDeltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
-                                                                      * self.outputs[neuron]
-                                                                      * (1.0 - self.outputs[neuron])
-                                                                      * self.netWRTWeightVector()),
-                                                 [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
-                    else:
-                        deltaDeltas = tf.concat((deltaDeltas, [self.errorWRTPsi(target, neuron)
-                                                               * self.outputs[neuron]
-                                                               * (1.0 - self.outputs[neuron])
-                                                               * self.netWRTWeightVector()]), 0)  # tack on a new row
-                    if self.debug:
-                        print("updateDeltas - layer {}, neuron {}, weight deltaDeltas\n{}".
-                              format(self.id, neuron, deltaDeltas))
-                deltas += deltaDeltas
+            for neuron in range(self.numberOfNeurons):
+                if neuron == 0:
+                    deltaDeltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
+                                                                  * self.netWRTWeightVector()),
+                                             [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
+                else:
+                    deltaDeltas = tf.concat((deltaDeltas, [self.errorWRTPsi(target, neuron)
+                                                           * self.netWRTWeightVector()]), 0)  # tack on a new row
+                if self.debug:
+                    print("updateDeltas - layer {}, neuron {}, weight deltaDeltas\n{}".
+                          format(self.id, neuron, deltaDeltas))
+            deltas += deltaDeltas
         self.propagateError()  # do this before updating weights
         return deltas
 
@@ -196,7 +148,9 @@ class NeuralLayer:
         previousLayerNeuronError = [0.0] * (self.numberOfInputs + 1)
         for thisLayerNeuron in range(self.numberOfNeurons):
             error = self.error[thisLayerNeuron]
-            amountForEachPreviousLayerNeuron = error * self.weights[:, thisLayerNeuron]
+            amountForEachPreviousLayerNeuron = (error * self.weights[:, thisLayerNeuron]
+                                                * self.outputs[thisLayerNeuron]
+                                                * (1.0 - self.outputs[thisLayerNeuron]))
             if self.debug:
                 print("sum of weights for neurons at this layer: {}".
                       format(tf.reduce_sum(self.weights[:, thisLayerNeuron])))
