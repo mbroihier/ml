@@ -21,6 +21,7 @@ class NeuralLayer:
         self.numberOfNeurons = numberOfOutputs
         self.backPropagatedErrorNotSet = True
         self.learningFactor = learningFactor
+        self.normalizer = 2.0
         self.delta = [0.0] * self.numberOfNeurons
         self.weights = tf.random.uniform([numberOfInputs+1, numberOfOutputs], minval=-0.5, maxval=0.5,
                                          dtype=tf.dtypes.float32)
@@ -85,7 +86,7 @@ class NeuralLayer:
         '''
         if (self.backPropagatedErrorNotSet):
             targetOutput = targetArray[index]
-            self.error[index] = - (self.learningFactor * (targetOutput - self.outputs[index])
+            self.error[index] = - (self.normalizer * (targetOutput - self.outputs[index])
                                    * self.outputs[index] * (1.0 - self.outputs[index]))
         else:
             pass  # should have been set by a higher layer
@@ -104,7 +105,7 @@ class NeuralLayer:
                     deltas = tf.concat([deltas, [self.errorWRTPsi(target, neuron)
                                                  * self.netWRTWeightVector()]], 0)  # tack on a new row
             self.propagateError()  # do this before updating weights and updateDeltas hasn't done this
-        self.weights -= tf.transpose(deltas)
+        self.weights -= self.learningFactor * tf.transpose(deltas)
 
     def updateDeltas(self, target, deltas=None):
         '''
