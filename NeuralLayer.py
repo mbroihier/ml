@@ -28,9 +28,12 @@ class NeuralLayer:
         self.error = [0.0] * numberOfOutputs
         self.filePath = filePath
         if filePath is not None:
-            fileHandle = open(filePath, "rb")
-            self.weights = pickle.load(fileHandle)
-            fileHandle.close()
+            try:
+                fileHandle = open(filePath, "rb")
+                self.weights = pickle.load(fileHandle)
+                fileHandle.close()
+            except FileNotFoundError:
+                pass
 
     def storeLayer(self, filePath):
         '''
