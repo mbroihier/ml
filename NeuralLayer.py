@@ -109,16 +109,16 @@ class NeuralLayer:
         for neuron in range(self.numberOfNeurons):
             if neuron == 0:
                 deltaDeltas = tf.reshape(tf.convert_to_tensor(self.errorWRTPsi(target, neuron)
-                                                                  * self.psiWRTz(neuron)
-                                                                  * self.netWRTWeightVector()),
-                                             [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
+                                                              * self.psiWRTz(neuron)
+                                                              * self.netWRTWeightVector()),
+                                         [1, len(self.netWRTWeightVector())])  # make a 1 by n vector
             else:
                 deltaDeltas = tf.concat((deltaDeltas, [self.errorWRTPsi(target, neuron)
-                                                           * self.psiWRTz(neuron)
-                                                           * self.netWRTWeightVector()]), 0)  # tack on a new row
+                                                       * self.psiWRTz(neuron)
+                                                       * self.netWRTWeightVector()]), 0)  # tack on a new row
             if self.debug:
                 print("updateDeltas - layer {}, neuron {}, weight deltaDeltas\n{}".
-                          format(self.id, neuron, deltaDeltas))
+                      format(self.id, neuron, deltaDeltas))
 
         if deltas is None:
             deltas = deltaDeltas
@@ -165,4 +165,5 @@ class NeuralLayer:
         Setter for learning factor
         '''
         self.learningFactor = factor
+
 
