@@ -69,7 +69,7 @@ class Model:
 
     def updateWeights(self, target=None, deltas=None):
         '''
-        Update the weights and propogte the error of all layers
+        Update the weights and propagate the error of all layers
         '''
         reversedLayers = self.layers.copy()
         reversedLayers.reverse()
