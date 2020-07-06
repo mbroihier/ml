@@ -66,6 +66,7 @@ def main(bypass, cycles):
     plt.title("Output Each Cycle")
     plt.xlabel("Cycle")
     plt.ylabel("Value")
+    plt.savefig("LearningXOR.pdf")
     plt.show()
 
     fig = plt.figure()
