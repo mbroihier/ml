@@ -11,7 +11,7 @@ A model can be stored by calling its storeModel method.  The model can be restor
 A Jupyter notebook is included that compares how well the back propagation gradient matches a calcuated gradient.  This can be altered to examine other models.  As long as the model's gradient and calculated gradient have a ratio close to one, the model is sane.
 
 A model that learns XOR is included as an example of using the classes.  The figure below illustrates the change in its outputs as it learns to recognize the appropriate response to binary combinations.
-[!alt text](LearningXOR.pdf)
+![](LearningXOR.pdf)
 
 # Setup
 
