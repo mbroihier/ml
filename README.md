@@ -19,21 +19,23 @@ I'm running this on a Raspberry PI 4 under Raspbian (buster).  The following is 
 
 From a bash shell:
 
-1) pip3 install virtualenv
-2) virtualenv env (can be any name)
-3) source env/bin/activate
-4) wget https://github.com/lhelontra/tensorflow-on-arm/releases/download/v2.2.0/tensorflow-2.2.0-cp37-none-linux_armv7l.whl
-5) pip3 install tensorflow-2.2.0-cp37-none-linux_armv7l.whl 
-6) pip3 install jupyter
-7) pip3 install pandas
-8) pip3 install seaborn
-9) pip3 install celluloid
-10) pip3 install IPython
-11) pip3 install matplotlib
-12) pip3 install pycodestyle pycodestyle_magic
-13) pip3 install pyflakes
-14) pip3 install flake8
-15) jupyter notebook --generate-config
+1) git clone https://github.com/mbroihier/ml
+2) cd ml
+3) sudo apt-get install python3-numpy
+4) sudo apt-get install python3-tk
+5) sudo apt-get install python3-magic
+6) sudo apt-get install libffi-dev
+7) sudo apt-get install libatlas-base-dev
+8) pip3 install virtualenv
+9) virtualenv env (can be any name)
+10) source env/bin/activate
+11) wget https://github.com/lhelontra/tensorflow-on-arm/releases/download/v2.2.0/tensorflow-2.2.0-cp37-none-linux_armv7l.whl
+12) pip3 install tensorflow-2.2.0-cp37-none-linux_armv7l.whl 
+13) pip3 install jupyter
+14) pip3 install matplotlib
+15) pip3 install pycodestyle pycodestyle_magic
+16) pip3 install flake8
+17) jupyter notebook --generate-config
 
 To run the XOR example (while in the "env" environment):
 ```
